@@ -1,0 +1,5 @@
+pip install django djangorestframework psycopg2-binary python-dotenv django-cors-headers pandas requests
+
+pip install django djangorestframework psycopg2-binary python-dotenv django-cors-headers pandas requests
+
+pip install pdfplumber tabula-py camelot-py[cv]
