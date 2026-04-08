@@ -40,19 +40,22 @@ class PDFParser:
                     except Exception:
                         continue
                         
+                    if 'TOTAL PASIVO Y PATRIMONIO' in line_upper:
+                        continue
+                        
                     if 'ACTIVO CORRIENTE' in line_upper:
                         datos['total_activo_corriente'] = valor
-                    elif 'ACTIVO NO CORRIENTE' in line_upper or 'NO CORRIENTE' in line_upper:
+                    elif 'ACTIVO NO CORRIENTE' in line_upper or ('NO CORRIENTE' in line_upper and 'PASIVO' not in line_upper):
                         datos['total_activo_no_corriente'] = valor
                     elif 'TOTAL ACTIVO' in line_upper and 'CORRIENTE' not in line_upper:
                         datos['total_activo'] = valor
                     elif 'PASIVO CORRIENTE' in line_upper:
                         datos['total_pasivo_corriente'] = valor
-                    elif 'PASIVO NO CORRIENTE' in line_upper or 'NO CORRIENTE' in line_upper:
+                    elif 'PASIVO NO CORRIENTE' in line_upper or ('NO CORRIENTE' in line_upper and 'ACTIVO' not in line_upper):
                         datos['total_pasivo_no_corriente'] = valor
-                    elif 'TOTAL PASIVO' in line_upper and 'CORRIENTE' not in line_upper:
+                    elif 'TOTAL PASIVO' in line_upper and 'CORRIENTE' not in line_upper and 'PATRIMONIO' not in line_upper:
                         datos['total_pasivo'] = valor
-                    elif 'TOTAL PATRIMONIO' in line_upper or 'PATRIMONIO' in line_upper:
+                    elif ('TOTAL PATRIMONIO' in line_upper or 'PATRIMONIO' in line_upper) and 'PASIVO' not in line_upper:
                         datos['total_patrimonio'] = valor
         return datos
 
