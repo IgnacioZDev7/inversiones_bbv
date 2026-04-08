@@ -44,7 +44,6 @@ El sistema automatiza:
 
 * Backend estructurado
 * Frontend con TailAdmin integrado
-* Conexión API funcionando
 * Scripts prototipo disponibles en `legacy/`
 
 ---
