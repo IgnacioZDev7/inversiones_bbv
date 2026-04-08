@@ -12,6 +12,10 @@ class ReporteFinancieroSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class IndicadorFinancieroSerializer(serializers.ModelSerializer):
+    gestion = serializers.IntegerField(source='reporte.gestion', read_only=True)
+    trimestre = serializers.IntegerField(source='reporte.trimestre', read_only=True)
+
     class Meta:
         model = IndicadorFinanciero
         fields = '__all__'
+
