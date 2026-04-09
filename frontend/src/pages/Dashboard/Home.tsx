@@ -4,6 +4,7 @@ import { fetchCompanies, fetchMetrics } from '../../api/client';
 import MetricsTable from '../../components/bbv/MetricsTable';
 import KpiCards from '../../components/bbv/KpiCards';
 import HistoricalChart from '../../components/bbv/HistoricalChart';
+import FinancialAnalysis from '../../components/bbv/FinancialAnalysis';
 
 export default function Home() {
   const [companies, setCompanies] = useState<any[]>([]);
@@ -113,6 +114,7 @@ export default function Home() {
           </div>
         ) : (
           <div>
+            <FinancialAnalysis metrics={metrics} />
             <KpiCards metrics={metrics} />
             <HistoricalChart metrics={metrics} />
             <MetricsTable metrics={metrics} />
