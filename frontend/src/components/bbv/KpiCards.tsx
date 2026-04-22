@@ -1,4 +1,5 @@
 import React from 'react';
+import TiltCard from '../common/TiltCard';
 
 interface Metric {
   id: number;
@@ -84,8 +85,8 @@ export default function KpiCards({ metrics }: KpiCardsProps) {
   const varEndeudamiento = calcVariation(latest.endeudamiento, previous?.endeudamiento || null);
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 md:gap-6 mb-6">
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 md:gap-6">
+      <TiltCard className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
         <div className="flex justify-between items-start">
           <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Activo Total</span>
           <VariationBadge val={varActivo} />
@@ -96,9 +97,9 @@ export default function KpiCards({ metrics }: KpiCardsProps) {
         <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           Al {latest.gestion} T{latest.trimestre}
         </div>
-      </div>
+      </TiltCard>
       
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <TiltCard className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
         <div className="flex justify-between items-start">
           <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Pasivo Total</span>
           <VariationBadge val={varPasivo} invertColors={true} />
@@ -109,9 +110,9 @@ export default function KpiCards({ metrics }: KpiCardsProps) {
         <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           Al {latest.gestion} T{latest.trimestre}
         </div>
-      </div>
+      </TiltCard>
       
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <TiltCard className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
         <div className="flex justify-between items-start">
           <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Patrimonio Neto</span>
           <VariationBadge val={varPatrimonio} />
@@ -122,9 +123,9 @@ export default function KpiCards({ metrics }: KpiCardsProps) {
         <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           Al {latest.gestion} T{latest.trimestre}
         </div>
-      </div>
+      </TiltCard>
       
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <TiltCard className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
         <div className="flex justify-between items-start">
           <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Liquidez Corriente</span>
           <VariationBadge val={varLiquidez} />
@@ -135,9 +136,9 @@ export default function KpiCards({ metrics }: KpiCardsProps) {
         <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           Al {latest.gestion} T{latest.trimestre}
         </div>
-      </div>
+      </TiltCard>
       
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+      <TiltCard className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
         <div className="flex justify-between items-start">
           <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Endeudamiento</span>
           <VariationBadge val={varEndeudamiento} invertColors={true} />
@@ -148,7 +149,7 @@ export default function KpiCards({ metrics }: KpiCardsProps) {
         <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           Al {latest.gestion} T{latest.trimestre}
         </div>
-      </div>
+      </TiltCard>
     </div>
   );
 }

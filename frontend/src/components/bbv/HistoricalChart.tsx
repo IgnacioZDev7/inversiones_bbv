@@ -148,7 +148,7 @@ export default function HistoricalChart({ metrics }: HistoricalChartProps) {
   ];
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] mb-6">
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="mb-6 flex justify-between">
         <h3 className="text-lg font-bold text-gray-800 dark:text-white/90">
           Evolución Financiera Histórica

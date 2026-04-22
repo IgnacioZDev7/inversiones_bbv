@@ -98,21 +98,53 @@ export default function SectorComparison({ companies, selectedCompanyId }: Secto
       type: 'bar',
       fontFamily: 'Inter, sans-serif',
       toolbar: { show: false },
+      dropShadow: {
+        enabled: true,
+        top: 8,
+        left: 0,
+        blur: 5,
+        color: '#000',
+        opacity: 0.08
+      }
     },
     colors: ['#3b82f6', '#f59e0b'], // Azul y Naranja
+    fill: {
+      type: 'gradient',
+      gradient: {
+        shade: 'light',
+        type: 'vertical',
+        shadeIntensity: 0.25,
+        opacityFrom: 1,
+        opacityTo: 0.75,
+        stops: [0, 100]
+      }
+    },
     plotOptions: {
       bar: {
         horizontal: false,
-        columnWidth: '50%',
-        borderRadius: 4,
+        columnWidth: '55%',
+        borderRadius: 6,
+        dataLabels: {
+          position: 'top', // Etiquetas arriba de la barra
+        },
       },
     },
     dataLabels: {
-      enabled: false,
+      enabled: true,
+      formatter: (val: number) => val.toFixed(2),
+      offsetY: -20,
+      style: {
+        fontSize: '11px',
+        fontWeight: 600,
+        colors: ['#87909e'], // Color neutro para adaptarse a modo claro/oscuro
+      },
+      background: {
+        enabled: false,
+      }
     },
     stroke: {
       show: true,
-      width: 2,
+      width: 3,
       colors: ['transparent'],
     },
     xaxis: {
@@ -120,6 +152,7 @@ export default function SectorComparison({ companies, selectedCompanyId }: Secto
       labels: {
         style: {
           colors: '#6b7280',
+          fontWeight: 500,
         },
       },
       axisBorder: {
@@ -132,7 +165,7 @@ export default function SectorComparison({ companies, selectedCompanyId }: Secto
     yaxis: {
       title: {
         text: 'Valor de Ratio',
-        style: { color: '#6b7280', fontWeight: 400 },
+        style: { color: '#6b7280', fontWeight: 500 },
       },
       labels: {
         style: { colors: '#6b7280' },
@@ -143,10 +176,16 @@ export default function SectorComparison({ companies, selectedCompanyId }: Secto
       position: 'top',
       horizontalAlign: 'right',
       labels: { colors: '#6b7280' },
+      markers: {
+        radius: 12,
+      }
     },
     grid: {
       borderColor: '#e5e7eb',
       strokeDashArray: 4,
+      padding: {
+        top: 20, // Dar espacio para los dataLabels
+      }
     },
     tooltip: {
       theme: 'dark',
@@ -170,11 +209,16 @@ export default function SectorComparison({ companies, selectedCompanyId }: Secto
   ];
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] mb-6">
-      <div className="mb-6 flex justify-between">
-        <h3 className="text-lg font-bold text-gray-800 dark:text-white/90">
-          Comparación Sectorial
-        </h3>
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-brand-500/10 hover:border-brand-500/30">
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <div>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white/90">
+            Comparación Sectorial
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Posición de la empresa frente a pares del mismo sector
+          </p>
+        </div>
       </div>
       <div>
         <ReactApexChart options={options} series={series} type="bar" height={350} />

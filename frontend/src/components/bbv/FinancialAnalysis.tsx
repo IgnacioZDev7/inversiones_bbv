@@ -48,20 +48,20 @@ export default function FinancialAnalysis({ metrics }: FinancialAnalysisProps) {
 
   // 2. Resolver Clasificación y Estilos
   let status = "Moderado";
-  let statusColor = "text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-500/10 border-yellow-200 dark:border-yellow-800";
+  let statusColor = "text-yellow-700 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-500/5 border-yellow-200/50 dark:border-yellow-800/50";
   let icon = (
-    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
   );
 
   if (isSaludable && !isRiesgoso) {
     status = "Saludable";
-    statusColor = "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-800";
+    statusColor = "text-emerald-700 bg-emerald-50/50 dark:text-emerald-400 dark:bg-emerald-500/5 border-emerald-200/50 dark:border-emerald-800/50";
     icon = (
-      <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
     );
   } else if (isRiesgoso) {
     status = "Riesgoso";
-    statusColor = "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-500/10 border-red-200 dark:border-red-800";
+    statusColor = "text-red-700 bg-red-50/50 dark:text-red-400 dark:bg-red-500/5 border-red-200/50 dark:border-red-800/50";
     icon = (
       <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
     );
@@ -97,11 +97,11 @@ export default function FinancialAnalysis({ metrics }: FinancialAnalysisProps) {
   };
 
   return (
-    <div className={`mb-6 p-5 rounded-2xl border ${statusColor}`}>
-      <div className="flex gap-4">
+    <div className={`h-full flex flex-col justify-center p-6 sm:p-8 rounded-2xl border ${statusColor}`}>
+      <div className="flex gap-5">
         {icon}
         <div className="flex-1">
-          <h4 className="text-base font-bold pb-1 flex items-center gap-2">
+          <h4 className="text-lg font-bold pb-2 flex items-center gap-2">
             Clasificación Financiera Preliminar: {status}
           </h4>
           <p className="text-sm font-medium opacity-90 leading-relaxed mb-3">

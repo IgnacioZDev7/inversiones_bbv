@@ -7,6 +7,46 @@ import KpiCards from '../../components/bbv/KpiCards';
 import HistoricalChart from '../../components/bbv/HistoricalChart';
 import FinancialAnalysis from '../../components/bbv/FinancialAnalysis';
 import SectorComparison from '../../components/bbv/SectorComparison';
+import RiskGauge from '../../components/bbv/RiskGauge';
+
+// --- Multimedia: Feedback Sonoro Simple ---
+let audioCtx: AudioContext | null = null;
+const playBeep = (type: 'normal' | 'riesgoso') => {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    if (type === 'riesgoso') {
+      // Tono de alerta (baja frecuencia, onda triangle)
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.3);
+      gainNode.gain.setValueAtTime(0.6, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      oscillator.start(audioCtx.currentTime);
+      oscillator.stop(audioCtx.currentTime + 0.3);
+    } else {
+      // Tono de confirmación (alta frecuencia, pop rápido)
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+      oscillator.start(audioCtx.currentTime);
+      oscillator.stop(audioCtx.currentTime + 0.1);
+    }
+  } catch (e) {
+    console.error("Audio playback failed", e);
+  }
+};
+// ------------------------------------------
 
 export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,6 +94,26 @@ export default function Home() {
         const data = await fetchMetrics(selectedCompany);
         setMetrics(data);
         setError(null);
+        
+        // Reproducir sonido basado en el estado financiero
+        if (data && data.length > 0) {
+          const sortedMetrics = [...data].sort((a: any, b: any) => {
+            if (a.gestion !== b.gestion) return b.gestion - a.gestion;
+            return b.trimestre - a.trimestre;
+          });
+          const latest = sortedMetrics[0];
+          const previous = sortedMetrics.length > 1 ? sortedMetrics[1] : null;
+
+          const nLiquidez = Number(latest.liquidez_corriente || 0);
+          const nEndeudamiento = Number(latest.endeudamiento || 0);
+          const nPatrimonioAct = Number(latest.patrimonio || 0);
+          const nPatrimonioPrev = Number(previous?.patrimonio || 0);
+          const varPatrimonio = (nPatrimonioPrev !== 0) ? ((nPatrimonioAct - nPatrimonioPrev) / nPatrimonioPrev) : 0;
+
+          // Mismo criterio que FinancialAnalysis
+          const isRiesgoso = (nLiquidez < 1.0 || nEndeudamiento > 0.8 || varPatrimonio < -0.10);
+          playBeep(isRiesgoso ? 'riesgoso' : 'normal');
+        }
       } catch {
         // Fallar de forma limpia
         setMetrics([]);
@@ -122,8 +182,15 @@ export default function Home() {
             Aún no hay métricas extraídas ni descargadas para esta entidad.
           </div>
         ) : (
-          <div>
-            <FinancialAnalysis metrics={metrics} />
+          <div key={selectedCompany} className="animate-fade-in space-y-8">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2">
+                <FinancialAnalysis metrics={metrics} />
+              </div>
+              <div>
+                <RiskGauge metrics={metrics} />
+              </div>
+            </div>
             <KpiCards metrics={metrics} />
             <HistoricalChart metrics={metrics} />
             <SectorComparison companies={companies as any} selectedCompanyId={selectedCompany} />
