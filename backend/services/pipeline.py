@@ -122,7 +122,12 @@ class FinancialPipeline:
             )
             
             self._actualizar_proceso(proceso_carga_completa)
-            return {'success': True, 'report_id': reporte.id, 'indicator_id': indicador.id}
+            return {
+                'success': True, 
+                'report_id': reporte.id, 
+                'indicator_id': indicador.id,
+                'patron_exitoso': reporte.nombre_archivo
+            }
             
         except Exception as e:
             self._actualizar_proceso(proceso_carga_completa, str(e))

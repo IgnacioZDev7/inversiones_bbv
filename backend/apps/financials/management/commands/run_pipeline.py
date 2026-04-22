@@ -69,7 +69,7 @@ class Command(BaseCommand):
                     resultado = pipeline.procesar_reporte(empresa, gestion, trimestre)
                     if resultado.get('success'):
                         self.stdout.write(self.style.SUCCESS(
-                            f'  ✅ OK | Reporte ID: {resultado.get("report_id")} | Indicador ID: {resultado.get("indicator_id")}'
+                            f'  ✅ OK | Reporte ID: {resultado.get("report_id")} | Indicador ID: {resultado.get("indicator_id")} | Patrón: {resultado.get("patron_exitoso")}'
                         ))
                     else:
                         self.stdout.write(self.style.ERROR(

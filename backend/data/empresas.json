@@ -1,0 +1,26 @@
+[
+  {
+    "codigo_bbv": "SOF",
+    "nombre": "Granja Avícola Integral Sofía Ltda.",
+    "sector": "Agroindustrial",
+    "activa": true
+  },
+  {
+    "codigo_bbv": "GRB",
+    "nombre": "Gravetal Bolivia S.A.",
+    "sector": "Agroindustrial",
+    "activa": true
+  },
+  {
+    "codigo_bbv": "POL",
+    "nombre": "Procesadora de Oleaginosas PROLEGA S.A.",
+    "sector": "Agroindustrial",
+    "activa": true
+  },
+  {
+    "codigo_bbv": "NUT",
+    "nombre": "Sociedad Agroindustrial Nutrioil S.A.",
+    "sector": "Agroindustrial",
+    "activa": true
+  }
+]
