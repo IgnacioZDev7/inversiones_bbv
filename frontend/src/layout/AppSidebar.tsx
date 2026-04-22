@@ -22,7 +22,7 @@ type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  subItems?: { name: string; path: string; pro?: boolean; new?: boolean; tooltip?: string }[];
 };
 
 const navItems: NavItem[] = [
@@ -94,6 +94,26 @@ const othersItems: NavItem[] = [
 
 type CompanyRecord = Record<string, unknown>;
 
+const cleanCompanyName = (name: string) => {
+  if (!name) return "";
+  return name
+    .replace(/\bS\.A\.\b/gi, "")
+    .replace(/\bS\.R\.L\.\b/gi, "")
+    .replace(/\bLtda\.\b/gi, "")
+    .replace(/\bS\.A\.M\.\b/gi, "")
+    .trim()
+    .replace(/,+$/, "")
+    .trim();
+};
+
+const getSectorIcon = (sectorName: string) => {
+  const s = sectorName.toLowerCase();
+  if (s.includes("agro") || s.includes("industria")) return <BoxCubeIcon />;
+  if (s.includes("banca") || s.includes("financiero")) return <PieChartIcon />;
+  if (s.includes("comercio") || s.includes("servicios")) return <GridIcon />;
+  return <PageIcon />;
+};
+
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
@@ -128,10 +148,11 @@ const AppSidebar: React.FC = () => {
   const sectorNavItems: NavItem[] = useMemo(() => {
     return Object.entries(companiesBySector).map(([sector, companies]) => ({
       name: sector,
-      icon: <BoxCubeIcon />,
+      icon: getSectorIcon(sector),
       subItems: companies.map((c: CompanyRecord) => ({
-        name: `${c.codigo_bbv} - ${c.nombre}`,
+        name: cleanCompanyName(String(c.nombre)),
         path: `/?company=${c.id}`,
+        tooltip: `${c.codigo_bbv} - ${c.nombre}`,
       })),
     }));
   }, [companiesBySector]);
@@ -279,6 +300,7 @@ const AppSidebar: React.FC = () => {
                   <li key={subItem.name}>
                     <Link
                       to={subItem.path}
+                      title={subItem.tooltip}
                       className={`menu-dropdown-item ${
                         isActive(subItem.path)
                           ? "menu-dropdown-item-active"
