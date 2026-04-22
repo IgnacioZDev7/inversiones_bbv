@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router';
 import PageMeta from '../../components/common/PageMeta';
 import { fetchCompanies, fetchMetrics } from '../../api/client';
 import MetricsTable from '../../components/bbv/MetricsTable';
@@ -7,9 +8,15 @@ import HistoricalChart from '../../components/bbv/HistoricalChart';
 import FinancialAnalysis from '../../components/bbv/FinancialAnalysis';
 
 export default function Home() {
-  const [companies, setCompanies] = useState<any[]>([]);
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
-  const [metrics, setMetrics] = useState<any[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCompany = searchParams.get('company') || '';
+
+  const setSelectedCompany = (id: string) => {
+    setSearchParams({ company: id }, { replace: true });
+  };
+
+  const [companies, setCompanies] = useState<Record<string, unknown>[]>([]);
+  const [metrics, setMetrics] = useState<Record<string, unknown>[]>([]);
   
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,17 +29,18 @@ export default function Home() {
         const data = await fetchCompanies();
         setCompanies(data);
         setError(null);
-        // Autoseleccionar la primera empresa si existe
-        if (data && data.length > 0) {
-            setSelectedCompany(data[0].id.toString());
+        // Autoseleccionar la primera empresa si existe y no hay una en la URL
+        if (data && data.length > 0 && !searchParams.get('company')) {
+            setSelectedCompany(String(data[0].id));
         }
-      } catch (err: any) {
+      } catch {
         setError('Error al cargar la lista de empresas. Verifica que el servidor Backend esté corriendo en el puerto 8000.');
       } finally {
         setLoading(false);
       }
     };
     loadCompanies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -45,7 +53,7 @@ export default function Home() {
         const data = await fetchMetrics(selectedCompany);
         setMetrics(data);
         setError(null);
-      } catch (err: any) {
+      } catch {
         // Fallar de forma limpia
         setMetrics([]);
       } finally {
@@ -67,19 +75,19 @@ export default function Home() {
       />
       
       <div className="space-y-4">
-        {/* Filtros */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-          <h2 className="mb-4 text-xl font-bold text-gray-800 dark:text-white/90">
+        {/* Filtros - Diseño secundario/minimizado */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+          <h2 className="mb-2 sm:mb-0 text-xl font-bold text-gray-800 dark:text-white/90">
             Monitor Financiero
           </h2>
           
-          <div className="flex items-center gap-4">
-            <label htmlFor="company-select" className="text-sm font-medium text-gray-700 dark:text-gray-400">
-              Empresa Analizada:
+          <div className="flex items-center gap-2">
+            <label htmlFor="company-select" className="text-xs font-medium text-gray-500 dark:text-gray-400 hidden sm:block">
+              Selección rápida:
             </label>
             <select
               id="company-select"
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+              className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
               value={selectedCompany}
               onChange={(e) => setSelectedCompany(e.target.value)}
               disabled={loading}
@@ -106,7 +114,7 @@ export default function Home() {
           </div>
         ) : isGlobalView ? (
           <div className="rounded-lg bg-gray-50 p-8 text-center text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">
-            Por favor, selecciona una empresa del menú superior para empezar a analizar.
+            Por favor, selecciona una empresa del menú lateral o superior para empezar a analizar.
           </div>
         ) : metrics.length === 0 ? (
           <div className="rounded-lg bg-gray-50 p-8 text-center text-gray-500 dark:bg-gray-800/50 dark:text-gray-400">

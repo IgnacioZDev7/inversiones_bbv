@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation } from "react-router";
+import { fetchCompanies } from "../api/client";
 
-// Assume these icons are imported from an icon library
 import {
   BoxCubeIcon,
   CalenderIcon,
@@ -28,8 +28,8 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    name: "Dashboard Global",
+    path: "/",
   },
   {
     icon: <CalenderIcon />,
@@ -92,35 +92,73 @@ const othersItems: NavItem[] = [
   },
 ];
 
+type CompanyRecord = Record<string, unknown>;
+
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "others";
+    type: "main" | "others" | "mercado";
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
-  );
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => location.pathname === path;
+  const [companiesBySector, setCompaniesBySector] = useState<Record<string, CompanyRecord[]>>({});
+
+  useEffect(() => {
+    const loadCompanies = async () => {
+      try {
+        const data = await fetchCompanies();
+        const grouped = data.reduce((acc: Record<string, CompanyRecord[]>, comp: CompanyRecord) => {
+          const sector = String(comp.sector || 'Otros');
+          if (!acc[sector]) acc[sector] = [];
+          acc[sector].push(comp);
+          return acc;
+        }, {});
+        setCompaniesBySector(grouped);
+      } catch (err) {
+        console.error("Error fetching companies in sidebar", err);
+      }
+    };
+    loadCompanies();
+  }, []);
+
+  const sectorNavItems: NavItem[] = useMemo(() => {
+    return Object.entries(companiesBySector).map(([sector, companies]) => ({
+      name: sector,
+      icon: <BoxCubeIcon />,
+      subItems: companies.map((c: CompanyRecord) => ({
+        name: `${c.codigo_bbv} - ${c.nombre}`,
+        path: `/?company=${c.id}`,
+      })),
+    }));
+  }, [companiesBySector]);
+
   const isActive = useCallback(
-    (path: string) => location.pathname === path,
-    [location.pathname]
+    (path: string) => {
+      if (path.includes('?')) {
+        return location.pathname + location.search === path;
+      }
+      if (path === '/' && location.search) {
+        return false;
+      }
+      return location.pathname === path;
+    },
+    [location.pathname, location.search]
   );
 
   useEffect(() => {
     let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+    ["mercado", "main", "others"].forEach((menuType) => {
+      const items = menuType === "main" ? navItems : menuType === "others" ? othersItems : sectorNavItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
-                type: menuType as "main" | "others",
+                type: menuType as "main" | "others" | "mercado",
                 index,
               });
               submenuMatched = true;
@@ -133,7 +171,7 @@ const AppSidebar: React.FC = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [location, isActive]);
+  }, [location.pathname, location.search, isActive, sectorNavItems]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -145,9 +183,9 @@ const AppSidebar: React.FC = () => {
         }));
       }
     }
-  }, [openSubmenu]);
+  }, [openSubmenu, companiesBySector]);
 
-  const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
+  const handleSubmenuToggle = (index: number, menuType: "main" | "others" | "mercado") => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
         prevOpenSubmenu &&
@@ -160,7 +198,7 @@ const AppSidebar: React.FC = () => {
     });
   };
 
-  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
+  const renderMenuItems = (items: NavItem[], menuType: "main" | "others" | "mercado") => (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => (
         <li key={nav.name}>
@@ -334,6 +372,26 @@ const AppSidebar: React.FC = () => {
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
+            
+            {sectorNavItems.length > 0 && (
+              <div>
+                <h2
+                  className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                    !isExpanded && !isHovered
+                      ? "lg:justify-center"
+                      : "justify-start"
+                  }`}
+                >
+                  {isExpanded || isHovered || isMobileOpen ? (
+                    "Mercado Bursátil"
+                  ) : (
+                    <HorizontaLDots className="size-6" />
+                  )}
+                </h2>
+                {renderMenuItems(sectorNavItems, "mercado")}
+              </div>
+            )}
+
             <div>
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
@@ -343,13 +401,14 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
+                  "General"
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
               </h2>
               {renderMenuItems(navItems, "main")}
             </div>
+
             <div className="">
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
