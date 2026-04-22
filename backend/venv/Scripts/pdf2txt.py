@@ -1,4 +1,4 @@
-#!C:\Users\My Equip\Desktop\UNIFRANZ\PGM-II\Proyecto\inversiones_bbv\backend\venv\Scripts\python.exe
+#!C:\Users\Ignacio\Desktop\PGM-II\Proyecto\inversiones_bbv\backend\venv\Scripts\python.exe
 """A command line tool for extracting text and images from PDF and
 output it to plain text, html, xml or tags.
 """

@@ -1,4 +1,4 @@
-#!C:\Users\My Equip\Desktop\UNIFRANZ\PGM-II\Proyecto\inversiones_bbv\backend\venv\Scripts\python.exe
+#!C:\Users\Ignacio\Desktop\PGM-II\Proyecto\inversiones_bbv\backend\venv\Scripts\python.exe
 """Extract pdf structure in XML format"""
 
 import logging
