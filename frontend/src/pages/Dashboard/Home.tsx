@@ -6,6 +6,7 @@ import MetricsTable from '../../components/bbv/MetricsTable';
 import KpiCards from '../../components/bbv/KpiCards';
 import HistoricalChart from '../../components/bbv/HistoricalChart';
 import FinancialAnalysis from '../../components/bbv/FinancialAnalysis';
+import SectorComparison from '../../components/bbv/SectorComparison';
 
 export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -125,6 +126,7 @@ export default function Home() {
             <FinancialAnalysis metrics={metrics} />
             <KpiCards metrics={metrics} />
             <HistoricalChart metrics={metrics} />
+            <SectorComparison companies={companies as any} selectedCompanyId={selectedCompany} />
             <MetricsTable metrics={metrics} />
           </div>
         )}
