@@ -7,7 +7,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 MESES = {1: '03', 2: '06', 3: '09', 4: '12'}
-FECHAS_FIN = {1: '31MAR', 2: '30JUN', 3: '30SEP', 4: '31DIC'}
+FECHAS_ESPERADAS = {
+    1: ['31MAR'],
+    2: ['30JUN'],
+    3: ['30SEP'],
+    4: ['31DIC', '31DEC']
+}
 
 class BBVDownloader:
     def __init__(self):
@@ -16,21 +21,43 @@ class BBVDownloader:
         }
     
     def _generate_candidates(self, codigo_bbv: str, gestion: int, trimestre: int) -> list:
-        mes = MESES[trimestre]
-        fecha_fin = FECHAS_FIN[trimestre]
-        return [
-            # Patrones históricos (BVC, etc)
-            f"{gestion}{mes}_{codigo_bbv}_EEFF_BG.PDF",
-            f"{gestion}{mes}_{codigo_bbv}_EEFF_BG.pdf",
+        candidates = []
+        
+        # Función auxiliar para generar variaciones de patrones por fecha
+        def get_patterns_for_dates(fechas):
+            pats = []
+            for fecha in fechas:
+                pats.extend([
+                    f"BG_{codigo_bbv}_2_{fecha}{gestion}.pdf",
+                    f"BG_{codigo_bbv}_2_{fecha}{gestion}.PDF",
+                    f"BG_{codigo_bbv}_1_{fecha}{gestion}.pdf",
+                    f"BG_{codigo_bbv}_1_{fecha}{gestion}.PDF",
+                    f"BG_{codigo_bbv}_{fecha}{gestion}.pdf",
+                    f"BG_{codigo_bbv}_{fecha}{gestion}.PDF",
+                ])
+            return pats
             
-            # Patrones Agroindustriales observados
-            f"BG_{codigo_bbv}_2_{fecha_fin}{gestion}.pdf",
-            f"BG_{codigo_bbv}_2_{fecha_fin}{gestion}.PDF",
-            f"BG_{codigo_bbv}_1_{fecha_fin}{gestion}.pdf",
-            f"BG_{codigo_bbv}_1_{fecha_fin}{gestion}.PDF",
-            f"BG_{codigo_bbv}_{fecha_fin}{gestion}.pdf",
-            f"BG_{codigo_bbv}_{fecha_fin}{gestion}.PDF",
-        ]
+        def get_historical_patterns(mes_str):
+            return [
+                f"{gestion}{mes_str}_{codigo_bbv}_EEFF_BG.PDF",
+                f"{gestion}{mes_str}_{codigo_bbv}_EEFF_BG.pdf",
+            ]
+
+        # 1. Patrones esperados (prioridad alta)
+        mes_num = MESES[trimestre]
+        candidates.extend(get_historical_patterns(mes_num))
+        candidates.extend(get_patterns_for_dates(FECHAS_ESPERADAS[trimestre]))
+        
+        # 2. Fallback: otras fechas del año por si se equivocaron al nombrar el archivo
+        fallback_fechas = []
+        for t, fechas in FECHAS_ESPERADAS.items():
+            if t != trimestre:
+                fallback_fechas.extend(fechas)
+                candidates.extend(get_historical_patterns(MESES[t]))
+                
+        candidates.extend(get_patterns_for_dates(fallback_fechas))
+        
+        return candidates
 
     def download_report(self, codigo_bbv: str, gestion: int, trimestre: int) -> dict:
         """
