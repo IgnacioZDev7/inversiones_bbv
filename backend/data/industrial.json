@@ -1,0 +1,14 @@
+{
+  "sector": "INDUSTRIAL",
+  "empresas": [
+    { "nombre": "Droguería Inti S.A.", "codigo": "DIN" },
+    { "nombre": "Fábrica Nacional de Cemento S.A.", "codigo": "FAN" },
+    { "nombre": "Industria Textil TSM S.A.", "codigo": "TSM" },
+    { "nombre": "Industrias de Aceite S.A.", "codigo": "FIN" },
+    { "nombre": "Industrias Oleaginosas S.A.", "codigo": "IOL" },
+    { "nombre": "ITACAMBA CEMENTO S.A.", "codigo": "ITA" },
+    { "nombre": "Plastiforte S.R.L.", "codigo": "PTF" },
+    { "nombre": "Sociedad Boliviana de Cemento S.A.", "codigo": "SBC" },
+    { "nombre": "Tigre S.A. Tubos, Conexiones y Cables", "codigo": "PLR" }
+  ]
+}
