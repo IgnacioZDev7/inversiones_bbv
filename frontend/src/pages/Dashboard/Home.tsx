@@ -8,6 +8,7 @@ import HistoricalChart from '../../components/bbv/HistoricalChart';
 import FinancialAnalysis from '../../components/bbv/FinancialAnalysis';
 import SectorComparison from '../../components/bbv/SectorComparison';
 import RiskGauge from '../../components/bbv/RiskGauge';
+import FinancialChart from '../../components/bbv/FinancialChart';
 
 // --- Multimedia: Feedback Sonoro Simple ---
 let audioCtx: AudioContext | null = null;
@@ -191,6 +192,12 @@ export default function Home() {
                 <RiskGauge metrics={metrics} />
               </div>
             </div>
+
+            <FinancialChart 
+              metrics={metrics} 
+              title={`Evolución Patrimonial - ${companies.find(c => String(c.id) === selectedCompany)?.nombre || ''}`}
+            />
+
             <KpiCards metrics={metrics} />
             <HistoricalChart metrics={metrics} />
             <SectorComparison companies={companies as any} selectedCompanyId={selectedCompany} />

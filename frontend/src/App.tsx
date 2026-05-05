@@ -18,6 +18,7 @@ import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
+import TestChart from "./pages/TestChart";
 
 export default function App() {
   return (
@@ -52,10 +53,12 @@ export default function App() {
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
           </Route>
-
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+
+          {/* Test Route (Aislada del Layout) */}
+          <Route path="/test-chart" element={<TestChart />} />
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
