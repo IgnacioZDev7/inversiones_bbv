@@ -296,7 +296,7 @@ export default function Simulator({ companies }: SimulatorProps) {
                     Gestión de Outliers:
                   </p>
                   <p className="text-[10px] text-amber-500/70 leading-relaxed font-medium italic">
-                    Se han excluido variaciones extremas (>300%) en el cálculo de volatilidad para evitar sesgos en el "Cap Dinámico".
+                    Se han excluido variaciones extremas (&gt;300%) en el cálculo de volatilidad para evitar sesgos en el "Cap Dinámico".
                   </p>
                 </div>
               )}
