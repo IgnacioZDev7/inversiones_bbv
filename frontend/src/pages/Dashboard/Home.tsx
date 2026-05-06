@@ -9,6 +9,7 @@ import FinancialAnalysis from '../../components/bbv/FinancialAnalysis';
 import SectorComparison from '../../components/bbv/SectorComparison';
 import RiskGauge from '../../components/bbv/RiskGauge';
 import FinancialChart from '../../components/bbv/FinancialChart';
+import Simulator from '../../components/bbv/Simulator';
 
 // --- Multimedia: Feedback Sonoro Simple ---
 let audioCtx: AudioContext | null = null;
@@ -193,6 +194,8 @@ export default function Home() {
                 <RiskGauge metrics={metrics} />
               </div>
             </div>
+
+            <Simulator companies={companies} />
 
             <FinancialChart 
               metrics={metrics} 

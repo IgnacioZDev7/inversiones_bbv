@@ -3,7 +3,8 @@ from api.views.financials import (
     EmpresaListView,
     EmpresaDetailView,
     ReporteFinancieroListView,
-    IndicadorFinancieroListView
+    IndicadorFinancieroListView,
+    FinancialSimulatorView
 )
 
 urlpatterns = [
@@ -11,4 +12,5 @@ urlpatterns = [
     path('companies/<int:pk>/', EmpresaDetailView.as_view(), name='empresa-detail'),
     path('reports/', ReporteFinancieroListView.as_view(), name='reporte-list'),
     path('metrics/', IndicadorFinancieroListView.as_view(), name='metric-list'),
+    path('simulator/', FinancialSimulatorView.as_view(), name='simulator'),
 ]
