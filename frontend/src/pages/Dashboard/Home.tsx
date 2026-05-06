@@ -93,6 +93,7 @@ export default function Home() {
       setLoading(true);
       try {
         const data = await fetchMetrics(selectedCompany);
+        console.log(`DEBUG FRONTEND: Total metrics recibidos para empresa ${selectedCompany}:`, data.length);
         setMetrics(data);
         setError(null);
         

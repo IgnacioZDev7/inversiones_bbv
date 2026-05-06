@@ -13,15 +13,17 @@ interface FinancialChartProps {
  * Transforma los datos del backend (gestión/trimestre) a formato compatible con Lightweight Charts (YYYY-MM-DD)
  */
 const transformData = (indicators: any[]) => {
+  console.log("DEBUG FinancialChart RAW METRICS:", indicators);
   if (!indicators || indicators.length === 0) return [];
 
-  return [...indicators]
+  const transformed = [...indicators]
     .sort((a, b) => {
-      if (a.gestion !== b.gestion) return a.gestion - b.gestion;
-      return a.trimestre - b.trimestre;
+      const yearA = Number(a.gestion || 0);
+      const yearB = Number(b.gestion || 0);
+      if (yearA !== yearB) return yearA - yearB;
+      return Number(a.trimestre || 0) - Number(b.trimestre || 0);
     })
     .map((item) => {
-      // Mapeo simple de trimestre a fin de mes para el eje de tiempo
       let month = '03';
       let day = '31';
       if (item.trimestre === 2) { month = '06'; day = '30'; }
@@ -33,11 +35,14 @@ const transformData = (indicators: any[]) => {
         value: parseFloat(item.patrimonio || 0),
       };
     });
+
+  console.log("DEBUG FinancialChart TRANSFORMED:", transformed);
+  return transformed;
 };
 
 const FinancialChart: React.FC<FinancialChartProps> = ({ 
   metrics = [], 
-  title = "Evolución de Patrimonio (Experimental)",
+  title = "Evolución de Patrimonio",
   height = 450 
 }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -57,11 +62,13 @@ const FinancialChart: React.FC<FinancialChartProps> = ({
         textColor: '#94a3b8',
       },
       grid: {
-        vertLines: { color: '#1e293b' }, // Slate 800
+        vertLines: { color: '#1e293b' },
         horzLines: { color: '#1e293b' },
       },
       timeScale: {
         borderColor: '#1e293b',
+        timeVisible: true,
+        rightBarStaysOnScroll: true,
       },
     });
 
@@ -88,6 +95,7 @@ const FinancialChart: React.FC<FinancialChartProps> = ({
       seriesRef.current = series;
     }
 
+    // Forzar visualización de todo el contenido temporal
     chart.timeScale().fitContent();
 
     const handleResize = () => {
@@ -146,13 +154,8 @@ const FinancialChart: React.FC<FinancialChartProps> = ({
       />
       
       <div className="mt-4 flex gap-4 text-[10px] text-gray-400">
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-blue-500"></span> 
-          Scroll: Zoom
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-emerald-500"></span> 
-          Drag: Pan
+        <span className="flex items-center gap-1 italic">
+          Tip: Usa el scroll para zoom y arrastra para mover el tiempo.
         </span>
       </div>
     </div>

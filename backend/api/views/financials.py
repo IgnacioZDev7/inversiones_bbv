@@ -47,5 +47,8 @@ class IndicadorFinancieroListView(generics.ListAPIView):
             queryset = queryset.filter(reporte__gestion=gestion)
         if trimestre:
             queryset = queryset.filter(reporte__trimestre=trimestre)
+        
+        # DEBUG: Verificar cantidad de registros en el servidor
+        print(f"DEBUG: Enviando {queryset.count()} registros para empresa_id={empresa_id}")
             
-        return queryset
+        return queryset.order_by('reporte__gestion', 'reporte__trimestre')
