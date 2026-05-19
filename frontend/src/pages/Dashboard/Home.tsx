@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router';
 import PageMeta from '../../components/common/PageMeta';
 import { fetchCompanies, fetchMetrics } from '../../api/client';
@@ -10,6 +10,7 @@ import SectorComparison from '../../components/bbv/SectorComparison';
 import RiskGauge from '../../components/bbv/RiskGauge';
 import FinancialChart from '../../components/bbv/FinancialChart';
 import Simulator from '../../components/bbv/Simulator';
+import BiometricVerification from '../../components/bbv/BiometricVerification';
 
 // --- Multimedia: Feedback Sonoro Simple ---
 let audioCtx: AudioContext | null = null;
@@ -63,6 +64,54 @@ export default function Home() {
   
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isBiometricVerified, setIsBiometricVerified] = useState<boolean>(false);
+
+  // Validación inicial y periódica de sesión biométrica
+  useEffect(() => {
+    const checkBiometricSession = () => {
+      const storedState = localStorage.getItem('biometricVerified');
+      const timestamp = localStorage.getItem('biometricTimestamp');
+      
+      if (storedState === 'true' && timestamp) {
+        const parsedTimestamp = parseInt(timestamp, 10);
+        if (isNaN(parsedTimestamp) || parsedTimestamp <= 0) {
+          handleBiometricExpiration();
+          return;
+        }
+
+        const now = Date.now();
+        const diff = now - parsedTimestamp;
+        const MAX_AGE = 30 * 60 * 1000; // 30 minutos
+        
+        if (diff >= MAX_AGE) {
+          handleBiometricExpiration();
+        } else {
+          // Válido
+          setIsBiometricVerified(true);
+        }
+      } else {
+        handleBiometricExpiration();
+      }
+    };
+
+    checkBiometricSession();
+    
+    // Revisar cada 60 segundos por si acaso (el componente hijo lo hace cada segundo)
+    const interval = setInterval(checkBiometricSession, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleBiometricExpiration = useCallback(() => {
+    localStorage.removeItem('biometricVerified');
+    localStorage.removeItem('biometricTimestamp');
+    setIsBiometricVerified(false);
+  }, []);
+
+  const handleBiometricVerificationSuccess = () => {
+    localStorage.setItem('biometricVerified', 'true');
+    localStorage.setItem('biometricTimestamp', Date.now().toString());
+    setIsBiometricVerified(true);
+  };
 
   useEffect(() => {
     // Cargar empresas al montar
@@ -195,7 +244,13 @@ export default function Home() {
               </div>
             </div>
 
-            <Simulator companies={companies} />
+            <BiometricVerification 
+              onVerified={handleBiometricVerificationSuccess} 
+              onExpire={handleBiometricExpiration}
+              isVerified={isBiometricVerified}
+            />
+            
+            <Simulator companies={companies} isVerified={isBiometricVerified} />
 
             <FinancialChart 
               metrics={metrics} 

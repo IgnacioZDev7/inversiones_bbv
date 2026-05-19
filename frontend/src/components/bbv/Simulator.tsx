@@ -6,10 +6,12 @@ const { createChart, ColorType } = LightweightCharts;
 
 interface SimulatorProps {
   companies: any[];
+  isVerified?: boolean;
 }
 
-export default function Simulator({ companies }: SimulatorProps) {
+export default function Simulator({ companies, isVerified = false }: SimulatorProps) {
   const { simulate, loading, error, result } = useFinancialSimulator();
+
   
   const [params, setParams] = useState({
     empresa: companies.length > 0 ? companies[0].id : '',
@@ -201,13 +203,20 @@ export default function Simulator({ companies }: SimulatorProps) {
             ))}
           </div>
         </div>
-        <button
-          onClick={handleSimulate}
-          disabled={loading || !params.empresa}
-          className="w-full md:w-auto px-12 py-4 bg-brand-500 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-brand-600 active:scale-95 transition-all shadow-2xl shadow-brand-500/30 disabled:opacity-50 mt-5 md:mt-6"
-        >
-          {loading ? 'Simulando...' : 'Ejecutar'}
-        </button>
+        <div className="w-full md:w-auto flex flex-col items-center mt-5 md:mt-6">
+          <button
+            onClick={handleSimulate}
+            disabled={loading || !params.empresa || (params.modo === 'avanzado' && !isVerified)}
+            className="w-full md:w-auto px-12 py-4 bg-brand-500 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-brand-600 active:scale-95 transition-all shadow-2xl shadow-brand-500/30 disabled:opacity-50 disabled:bg-gray-500 disabled:shadow-none"
+          >
+            {loading ? 'Simulando...' : params.modo === 'avanzado' && !isVerified ? 'BLOQUEADO' : 'Ejecutar'}
+          </button>
+          {params.modo === 'avanzado' && !isVerified && (
+            <span className="text-[10px] font-bold text-red-500 mt-2 text-center">
+              ⚠️ Verificación biométrica requerida
+            </span>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -247,13 +256,31 @@ export default function Simulator({ companies }: SimulatorProps) {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            <div className="lg:col-span-2 space-y-6">
-              <div ref={chartContainerRef} className="h-[380px] w-full" />
-              {result.modo === 'avanzado' && (
-                <div className="flex flex-wrap items-center justify-center gap-8 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">
-                  <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50"></span> Mediana</span>
-                  <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-green-500 shadow-lg shadow-green-500/50"></span> P75 (Optimista)</span>
-                  <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500 shadow-lg shadow-red-500/50"></span> P25 (Pesimista)</span>
+            <div className="lg:col-span-2 space-y-6 relative">
+              <div 
+                className={`transition-all duration-500 ${params.modo === 'avanzado' && !isVerified ? 'blur-md pointer-events-none opacity-50 select-none' : ''}`}
+              >
+                <div ref={chartContainerRef} className="h-[380px] w-full" />
+                {result.modo === 'avanzado' && (
+                  <div className="flex flex-wrap items-center justify-center gap-8 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mt-4">
+                    <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50"></span> Mediana</span>
+                    <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-green-500 shadow-lg shadow-green-500/50"></span> P75 (Optimista)</span>
+                    <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500 shadow-lg shadow-red-500/50"></span> P25 (Pesimista)</span>
+                  </div>
+                )}
+              </div>
+              
+              {params.modo === 'avanzado' && !isVerified && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-6 animate-fade-in pointer-events-none">
+                  <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl flex flex-col items-center max-w-sm text-center">
+                    <div className="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mb-4">
+                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    <h4 className="text-white font-black uppercase tracking-widest text-sm mb-2">Acceso Biométrico Requerido</h4>
+                    <p className="text-gray-400 text-xs leading-relaxed font-medium">
+                      Para visualizar las proyecciones estocásticas del motor Monte Carlo, por favor verifica tu identidad en el panel inferior.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
