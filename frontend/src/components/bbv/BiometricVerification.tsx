@@ -20,7 +20,46 @@ export default function BiometricVerification({ onVerified, onExpire, isVerified
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   
+  const CHALLENGES = [
+    { type: 'look_left', text: '1/3: Gire la cabeza a la IZQUIERDA.' },
+    { type: 'look_right', text: '2/3: Gire la cabeza a la DERECHA.' },
+    { type: 'look_up', text: '3/3: Mire ligeramente hacia ARRIBA.' }
+  ];
+
+  const [challengeStep, setChallengeStep] = useState<number>(0);
+  const [challengeTimeLeft, setChallengeTimeLeft] = useState<number | null>(null);
+
   const webcamRef = useRef<Webcam>(null);
+
+  const startCapture = () => {
+    setError(null);
+    setResult(null);
+    setIsCapturing(true);
+    setChallengeTimeLeft(10);
+  };
+
+  // Reset del step si se cancela o falla
+  const resetChallenge = () => {
+    setIsCapturing(false);
+    setSelfieSrc(null);
+    setChallengeStep(0);
+    setChallengeTimeLeft(null);
+  };
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isCapturing && challengeTimeLeft !== null) {
+      if (challengeTimeLeft > 0) {
+        interval = setInterval(() => {
+          setChallengeTimeLeft(prev => prev !== null ? prev - 1 : null);
+        }, 1000);
+      } else {
+        resetChallenge();
+        setError("Tiempo agotado para la prueba de vida. Por favor, inténtelo nuevamente.");
+      }
+    }
+    return () => clearInterval(interval);
+  }, [isCapturing, challengeTimeLeft]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -84,7 +123,7 @@ export default function BiometricVerification({ onVerified, onExpire, isVerified
 
   const retakeSelfie = () => {
     setSelfieSrc(null);
-    setIsCapturing(true);
+    startCapture();
   };
 
   const dataURLtoFile = (dataurl: string, filename: string) => {
@@ -101,7 +140,7 @@ export default function BiometricVerification({ onVerified, onExpire, isVerified
     return new File([u8arr], filename, {type:mime});
   };
 
-  const handleVerify = async () => {
+  const handleVerify = useCallback(async () => {
     if (!documentFile || !selfieSrc) return;
     
     setLoading(true);
@@ -114,6 +153,9 @@ export default function BiometricVerification({ onVerified, onExpire, isVerified
       formData.append('document_image', documentFile);
       formData.append('selfie_image', selfieFile);
       
+      const currentChallenge = CHALLENGES[challengeStep];
+      formData.append('challenge_type', currentChallenge.type);
+      
       const response = await axios.post('http://localhost:8000/api/biometric/verify/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -122,19 +164,35 @@ export default function BiometricVerification({ onVerified, onExpire, isVerified
       
       setResult(response.data);
       if (response.data.verified) {
-        if (documentPreview) URL.revokeObjectURL(documentPreview);
-        setDocumentPreview(null);
-        setDocumentFile(null);
-        setSelfieSrc(null);
-        
-        onVerified();
+        if (challengeStep < 2) {
+          setChallengeStep(prev => prev + 1);
+          setSelfieSrc(null);
+          startCapture();
+        } else {
+          if (documentPreview) URL.revokeObjectURL(documentPreview);
+          setDocumentPreview(null);
+          setDocumentFile(null);
+          setSelfieSrc(null);
+          setChallengeStep(0);
+          onVerified();
+        }
+      } else {
+         resetChallenge();
       }
     } catch (err: any) {
       setError(err.response?.data?.error || "Error de conexión con el servidor de validación.");
+      resetChallenge();
     } finally {
       setLoading(false);
     }
-  };
+  }, [documentFile, selfieSrc, challengeStep, documentPreview, onVerified]);
+
+  useEffect(() => {
+    if (selfieSrc && !isCapturing && documentFile && !loading) {
+      handleVerify();
+    }
+  }, [selfieSrc, isCapturing, documentFile, loading, handleVerify]);
+
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -183,7 +241,7 @@ export default function BiometricVerification({ onVerified, onExpire, isVerified
           Validación Biométrica Requerida
         </h3>
         <p className="text-sm text-gray-500 mt-1 font-medium">
-          Sube tu documento de identidad y tómate una selfie para desbloquear el Simulador Financiero Avanzado.
+          Sube tu documento de identidad y completa la prueba de vida secuencial para desbloquear el Simulador Financiero Avanzado.
         </p>
       </div>
 
@@ -191,7 +249,7 @@ export default function BiometricVerification({ onVerified, onExpire, isVerified
         {/* Paso 1: Documento */}
         <div className="space-y-3">
           <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">PASO 1: Documento</h4>
-          <div className="h-48 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden bg-gray-50 dark:bg-black/20 group hover:border-brand-500 transition-colors">
+          <div className="h-64 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden bg-gray-50 dark:bg-black/20 group hover:border-brand-500 transition-colors">
             {documentPreview ? (
               <img src={documentPreview} alt="Documento" className="absolute inset-0 w-full h-full object-cover opacity-80" />
             ) : (
@@ -209,18 +267,26 @@ export default function BiometricVerification({ onVerified, onExpire, isVerified
           </div>
         </div>
 
-        {/* Paso 2: Selfie */}
+        {/* Paso 2: Selfie Secuencial */}
         <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">PASO 2: Selfie</h4>
-          <div className="h-48 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden bg-black border border-gray-200 dark:border-gray-800 shadow-inner">
+          <div className="flex items-center justify-between">
+            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">PASO 2: Liveness 3D</h4>
+            <div className="flex gap-1">
+              {[0, 1, 2].map((step) => (
+                <div key={step} className={`h-1.5 w-6 rounded-full transition-all duration-500 ${step < challengeStep ? 'bg-green-500' : step === challengeStep ? 'bg-brand-500 animate-pulse' : 'bg-gray-300 dark:bg-gray-700'}`} />
+              ))}
+            </div>
+          </div>
+          <div className="h-64 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden bg-black border border-gray-200 dark:border-gray-800 shadow-inner">
             {!isCapturing && !selfieSrc ? (
               <div className="text-center w-full h-full flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800">
                 <svg className="w-10 h-10 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                 <button 
-                  onClick={() => setIsCapturing(true)}
-                  className="px-4 py-2 bg-gray-900 text-white dark:bg-white dark:text-gray-900 rounded-lg text-xs font-bold hover:scale-105 transition-transform"
+                  onClick={startCapture}
+                  disabled={!documentFile}
+                  className="px-4 py-2 bg-gray-900 text-white dark:bg-white dark:text-gray-900 rounded-lg text-xs font-bold hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
                 >
-                  Abrir Cámara
+                  {documentFile ? 'Iniciar Escaneo' : 'Sube Documento Primero'}
                 </button>
               </div>
             ) : isCapturing ? (
@@ -232,22 +298,37 @@ export default function BiometricVerification({ onVerified, onExpire, isVerified
                   videoConstraints={{ facingMode: "user" }}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
+                
+                {/* Contorno Óvalo BCP Style */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                  <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <ellipse cx="50" cy="50" rx="35" ry="45" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeDasharray="5,5" />
+                    {challengeStep > 0 && (
+                      <ellipse cx="50" cy="50" rx="35" ry="45" fill="none" stroke="#22c55e" strokeWidth="2"
+                               strokeDasharray="255" strokeDashoffset={255 - (255 * challengeStep / 3)}
+                               className="transition-all duration-1000 ease-out" />
+                    )}
+                  </svg>
+                </div>
+
+                <div className="absolute top-3 left-0 right-0 mx-auto w-11/12 bg-black/80 backdrop-blur-md p-3 rounded-xl border border-brand-500/50 flex flex-col items-center shadow-2xl animate-fade-in z-20">
+                  <span className="text-[10px] uppercase font-black tracking-widest text-brand-400 mb-1">Mire dentro del óvalo</span>
+                  <span className="text-sm font-bold text-white text-center leading-tight">{CHALLENGES[challengeStep].text}</span>
+                  <span className={`text-xs font-mono font-bold mt-1.5 ${challengeTimeLeft && challengeTimeLeft <= 3 ? 'text-red-500 animate-pulse' : 'text-gray-300'}`}>00:{challengeTimeLeft?.toString().padStart(2, '0')}</span>
+                </div>
                 <button 
                   onClick={captureSelfie}
-                  className="absolute bottom-4 px-6 py-2 bg-brand-500 text-white rounded-full text-xs font-bold tracking-widest shadow-[0_0_15px_rgba(59,130,246,0.6)] hover:bg-brand-400 transition-colors"
+                  className="absolute bottom-6 px-8 py-3 bg-brand-500 text-white rounded-full text-xs font-black tracking-widest shadow-[0_0_20px_rgba(59,130,246,0.6)] hover:bg-brand-400 transition-all hover:scale-105 active:scale-95 z-20"
                 >
-                  CAPTURAR
+                  TOMAR FOTO
                 </button>
               </>
             ) : (
               <>
                 <img src={selfieSrc!} alt="Selfie" className="absolute inset-0 w-full h-full object-cover" />
-                <button 
-                  onClick={retakeSelfie}
-                  className="absolute bottom-4 px-4 py-1.5 bg-black/60 backdrop-blur-md text-white rounded-full text-[10px] font-bold uppercase border border-white/20 hover:bg-black/80 transition-colors"
-                >
-                  Repetir
-                </button>
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm z-10">
+                  <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
               </>
             )}
           </div>
@@ -265,28 +346,18 @@ export default function BiometricVerification({ onVerified, onExpire, isVerified
         <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
           <svg className="w-5 h-5 flex-shrink-0 text-amber-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           <div>
-            <p className="text-xs font-bold text-amber-500">{result.message}</p>
-            <p className="text-[10px] text-amber-500/70 mt-1 font-medium">Nivel de Similitud: {result.similarity}% (Requerido: 85%)</p>
+            <p className="text-xs font-bold text-amber-500">{result.message || result.error}</p>
+            {result.similarity !== undefined && result.similarity !== null && (
+               <p className="text-[10px] text-amber-500/70 mt-1 font-medium">Nivel de Similitud: {result.similarity}% (Requerido: 85%)</p>
+            )}
           </div>
         </div>
       )}
 
-      <div className="border-t border-gray-100 dark:border-white/5 pt-6 flex items-center justify-between">
-        <p className="text-[9px] text-gray-400 font-medium max-w-xs leading-relaxed italic">
+      <div className="border-t border-gray-100 dark:border-white/5 pt-6">
+        <p className="text-[9px] text-gray-400 font-medium leading-relaxed italic text-center">
           Tus imágenes son procesadas de manera segura y temporal en memoria. No almacenamos datos biométricos en nuestros servidores.
         </p>
-        <button
-          onClick={handleVerify}
-          disabled={loading || !documentFile || !selfieSrc}
-          className="px-8 py-3 bg-brand-500 text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-brand-600 hover:shadow-[0_0_20px_rgba(59,130,246,0.4)] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center gap-2"
-        >
-          {loading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              Verificando...
-            </>
-          ) : 'Iniciar Verificación'}
-        </button>
       </div>
     </div>
   );

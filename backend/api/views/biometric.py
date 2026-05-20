@@ -22,13 +22,14 @@ class BiometricVerifyView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 2. Leer las imágenes directamente en memoria (sin guardar en disco)
+        # 2. Extraer parámetros
         document_bytes = document_file.read()
         selfie_bytes = selfie_file.read()
+        challenge_type = request.data.get('challenge_type')
 
         # 3. Instanciar el agente y verificar
         agent = BiometricVerificationAgent()
-        result = agent.compare_faces(document_bytes, selfie_bytes)
+        result = agent.compare_faces(document_bytes, selfie_bytes, challenge_type=challenge_type)
 
         # 4. Devolver el resultado
         if result.get("verified"):
