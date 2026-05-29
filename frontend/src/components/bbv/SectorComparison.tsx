@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
-import { fetchMetrics } from '../../api/client';
+import { fetchSectorComparison } from '../../api/client';
 
 interface Company {
   id: string | number;
@@ -19,54 +19,35 @@ interface SectorComparisonProps {
 export default function SectorComparison({ companies, selectedCompanyId }: SectorComparisonProps) {
   const [chartData, setChartData] = useState<{ name: string; liquidez: number; endeudamiento: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cachedSector, setCachedSector] = useState<string | null>(null);
 
   useEffect(() => {
     const loadComparisonData = async () => {
+      const currentCompany = companies.find(c => String(c.id) === String(selectedCompanyId));
+      const currentSector = currentCompany?.sector;
+      
+      if (!currentSector) return;
+
+      // Caché básico para evitar re-fetches de la misma empresa/sector
+      if (currentSector === cachedSector && chartData.length > 0) return;
+
       setLoading(true);
       try {
-        const currentCompany = companies.find(c => String(c.id) === String(selectedCompanyId));
-        const currentSector = currentCompany?.sector;
+        const start = performance.now();
+        const results = await fetchSectorComparison(currentSector);
+        const end = performance.now();
+        console.log(`[PERFORMANCE] fetchSectorComparison(${currentSector}) completado en ${(end - start).toFixed(2)}ms. Empresas procesadas: ${results.length}. Peticiones de red: 1`);
         
-        // 1. Filtrar estrictamente por sector:
-        // SOLO incluir empresas del sector actual
-        const sectorCompanies = currentSector 
-          ? companies.filter(c => c.sector === currentSector)
-          : companies;
-
-        // 2. Agrupar datos por empresa: pedimos los datos de cada empresa por id
-        const dataPromises = sectorCompanies.map(comp => fetchMetrics(String(comp.id)));
-        const results = await Promise.all(dataPromises);
-        
-        const newChartData = [];
-        
-        for (let i = 0; i < sectorCompanies.length; i++) {
-          const compMetrics = results[i];
-          if (Array.isArray(compMetrics) && compMetrics.length > 0) {
-            // 3. Seleccionar únicamente el último reporte por empresa:
-            // ordenar por fecha y tomar el más reciente
-            const sortedMetrics = [...compMetrics].sort((a: any, b: any) => {
-              const gestionA = Number(a.gestion);
-              const gestionB = Number(b.gestion);
-              const trimA = Number(a.trimestre);
-              const trimB = Number(b.trimestre);
-              
-              if (gestionA !== gestionB) return gestionB - gestionA;
-              return trimB - trimA;
-            });
-            const latest = sortedMetrics[0];
-            
-            // 4. Generar el dataset final: 1 punto por empresa
-            newChartData.push({
-              name: sectorCompanies[i].codigo_bbv,
-              liquidez: Number(latest.liquidez_corriente) || 0,
-              endeudamiento: Number(latest.endeudamiento) || 0
-            });
-          }
-        }
+        const newChartData = results.map((item: any) => ({
+          name: item.codigo_bbv,
+          liquidez: item.liquidez_corriente,
+          endeudamiento: item.endeudamiento
+        }));
         
         setChartData(newChartData);
+        setCachedSector(currentSector);
       } catch (error) {
-        console.error("Error al cargar datos comparativos:", error);
+        console.error("Error al cargar datos comparativos sectoriales:", error);
       } finally {
         setLoading(false);
       }
@@ -75,12 +56,18 @@ export default function SectorComparison({ companies, selectedCompanyId }: Secto
     if (companies && companies.length > 0 && selectedCompanyId) {
       loadComparisonData();
     }
-  }, [companies, selectedCompanyId]);
+  }, [companies, selectedCompanyId, cachedSector, chartData.length]);
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] mb-6 flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent dark:border-brand-400 dark:border-t-transparent"></div>
+      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-brand-500/10 hover:border-brand-500/30 animate-pulse">
+        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+          <div className="w-full">
+            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
+            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+          </div>
+        </div>
+        <div className="h-[350px] w-full bg-gray-100 dark:bg-gray-800 rounded-xl"></div>
       </div>
     );
   }

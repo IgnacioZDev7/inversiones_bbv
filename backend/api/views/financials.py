@@ -57,6 +57,45 @@ class IndicadorFinancieroListView(generics.ListAPIView):
             
         return queryset.order_by('reporte__gestion', 'reporte__trimestre')
 
+class LatestMetricsView(APIView):
+    def get(self, request):
+        empresa_id = request.query_params.get('empresa')
+        if not empresa_id:
+            return Response({"error": "Debe especificar una empresa"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        ultimo_indicador = IndicadorFinanciero.objects.filter(
+            reporte__empresa_id=empresa_id
+        ).order_by('-reporte__gestion', '-reporte__trimestre').first()
+        
+        if ultimo_indicador:
+            serializer = IndicadorFinancieroSerializer(ultimo_indicador)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response({"error": "No hay métricas para esta empresa"}, status=status.HTTP_404_NOT_FOUND)
+
+class SectorComparisonView(APIView):
+    def get(self, request):
+        sector = request.query_params.get('sector')
+        if not sector:
+            return Response({"error": "Debe especificar un sector"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        empresas = Empresa.objects.filter(sector=sector)
+        data = []
+        for empresa in empresas:
+            ultimo_indicador = IndicadorFinanciero.objects.filter(
+                reporte__empresa=empresa
+            ).order_by('-reporte__gestion', '-reporte__trimestre').first()
+            
+            if ultimo_indicador:
+                data.append({
+                    "company_id": empresa.id,
+                    "codigo_bbv": empresa.codigo_bbv,
+                    "liquidez_corriente": float(ultimo_indicador.liquidez_corriente) if ultimo_indicador.liquidez_corriente else 0,
+                    "endeudamiento": float(ultimo_indicador.endeudamiento) if ultimo_indicador.endeudamiento else 0
+                })
+        
+        return Response(data, status=status.HTTP_200_OK)
+
 class FinancialSimulatorView(APIView):
     """
     Endpoint para realizar simulaciones financieras.

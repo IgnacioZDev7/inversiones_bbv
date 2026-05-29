@@ -19,4 +19,14 @@ export const fetchMetrics = async (empresaId?: string) => {
   return response.data;
 };
 
+export const fetchLatestMetrics = async (empresaId: string) => {
+  const response = await apiClient.get(`metrics/latest/?empresa=${empresaId}`);
+  return response.data;
+};
+
+export const fetchSectorComparison = async (sector: string) => {
+  const response = await apiClient.get(`metrics/sector-comparison/?sector=${encodeURIComponent(sector)}`);
+  return response.data;
+};
+
 export default apiClient;
